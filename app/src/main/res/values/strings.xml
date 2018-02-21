@@ -1,0 +1,10 @@
+<resources>
+    <string name="app_name">NGO</string>
+    <string name="title_home">Home</string>
+    <string name="title_location">Location</string>
+    <string name="action_attach">Attach</string>
+    <string name="action_send">Send</string>
+    <string name="action_discard">Discard</string>
+    <string name="action_call">Call</string>
+    <string name="regards">Best Regards,</string>
+</resources>
