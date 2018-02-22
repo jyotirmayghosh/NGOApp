@@ -126,13 +126,13 @@ public class MessageFragment extends Fragment {
         message = messageText.getText().toString();
         if (item.getItemId() == R.id.action_send) {
             uploadImageSend();
-        } else if (item.getItemId() == R.id.action_attach) {
+        } /*else if (item.getItemId() == R.id.action_attach) {
             Intent intent = new Intent();
-            intent.setType("image/*");
+            intent.setType("image*//*");
             intent.setAction(Intent.ACTION_GET_CONTENT);
             startActivityForResult(Intent.createChooser(intent, "Select Image From Gallery"), PICK_IMAGE_REQUEST);
 
-        } else if (item.getItemId() == R.id.action_discard) {
+        }*/ else if (item.getItemId() == R.id.action_discard) {
             subjectText.setText("");
             messageText.setText("");
             Toast.makeText(getContext(), "Message Discarded.", Toast.LENGTH_SHORT).show();

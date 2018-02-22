@@ -1,6 +1,9 @@
 package com.example.jyotirmayghosh.ngo.fragment;
 
+import android.app.ProgressDialog;
 import android.content.Context;
+import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.location.Address;
 import android.location.Geocoder;
@@ -12,6 +15,7 @@ import android.support.annotation.Nullable;
 import android.support.constraint.ConstraintLayout;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.Fragment;
+import android.support.v7.app.AlertDialog;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -35,6 +39,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
+import static android.content.Context.LOCATION_SERVICE;
 import static android.content.Context.MODE_PRIVATE;
 
 
@@ -47,6 +52,7 @@ public class LocationFragment extends Fragment implements LocationListener {
     private TextView setLocationView;
     LocationManager locationManager;
     String name, phone, latitude, longitude;
+    ProgressDialog progressDialog;
     String serverUrl = "https://accelerated-invento.000webhostapp.com/send_location.php";
 
     public LocationFragment() {
@@ -83,16 +89,48 @@ public class LocationFragment extends Fragment implements LocationListener {
         locationLayout.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                getLocation();
+                LocationManager location = (LocationManager) getContext().getSystemService(LOCATION_SERVICE);
+
+                if (location.isProviderEnabled(LocationManager.GPS_PROVIDER)){
+                    progressDialog = new ProgressDialog(getContext());
+                    progressDialog.setMessage("Getting location, please wait...");
+                    progressDialog.show();
+                    getLocation();
+                }else{
+                    showGPSDisabledAlertToUser();
+                }
             }
         });
 
     }
 
+    private void showGPSDisabledAlertToUser(){
+        AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(getContext());
+        alertDialogBuilder.setMessage("Please enable GPS to send current location.")
+                .setCancelable(false)
+                .setPositiveButton("Enable GPS",
+                        new DialogInterface.OnClickListener(){
+                            public void onClick(DialogInterface dialog, int id){
+                                Intent callGPSSettingIntent = new Intent(
+                                        android.provider.Settings.ACTION_LOCATION_SOURCE_SETTINGS);
+                                startActivity(callGPSSettingIntent);
+                            }
+                        });
+        alertDialogBuilder.setNegativeButton("Cancel",
+                new DialogInterface.OnClickListener(){
+                    public void onClick(DialogInterface dialog, int id){
+                        dialog.cancel();
+                    }
+                });
+        AlertDialog alert = alertDialogBuilder.create();
+        alert.show();
+    }
+
     void getLocation() {
         try {
-            locationManager = (LocationManager) getContext().getSystemService(Context.LOCATION_SERVICE);
+            locationManager = (LocationManager) getContext().getSystemService(LOCATION_SERVICE);
             locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 5000, 5, this);
+            progressDialog.dismiss();
         }
         catch(SecurityException e) {
             e.printStackTrace();
@@ -141,12 +179,17 @@ public class LocationFragment extends Fragment implements LocationListener {
     public boolean onOptionsItemSelected(MenuItem item) {
 
         if (item.getItemId() == R.id.action_send) {
+            progressDialog = new ProgressDialog(getContext());
+            progressDialog.setMessage("Send location, please wait...");
+            progressDialog.show();
+
             final RequestQueue queue = Volley.newRequestQueue(getContext());
             StringRequest stringRequest = new StringRequest(Request.Method.POST, serverUrl,
                     new Response.Listener<String>() {
                         @Override
                         public void onResponse(String response) {
-                            setLocationView.setText(response);
+                            progressDialog.dismiss();
+                            setLocationView.setText("");
                             Toast.makeText(getContext(), response, Toast.LENGTH_SHORT).show();
                             queue.stop();
                         }
@@ -169,6 +212,9 @@ public class LocationFragment extends Fragment implements LocationListener {
             };
             queue.add(stringRequest);
 
+        } else if (item.getItemId() == R.id.action_discard) {
+            setLocationView.setText("");
+            Toast.makeText(getContext(), "Location Discarded.", Toast.LENGTH_SHORT).show();
         }
         return super.onOptionsItemSelected(item);
     }

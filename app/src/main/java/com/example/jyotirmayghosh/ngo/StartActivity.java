@@ -60,12 +60,17 @@ public class StartActivity extends AppCompatActivity implements
             public void onClick(View view) {
                 name = nameText.getText().toString();
                 phone = phoneText.getText().toString();
+                char noStart = phone.charAt(0);
+                String number = noStart+"";
 
                 if (nameText.getText().toString().length() == 0) {
                     nameText.setError("Name cannot be Blank");
                     return;
-                } else if (phoneText.getText().toString().length() != 10) {
-                    phoneText.setError("Invalid phone number");
+                } else if (phoneText.getText().toString().length() != 10 ||
+                        number.equals("0") || number.equals("1") ||
+                        number.equals("2") || number.equals("3") ||
+                        number.equals("4") || number.equals("5")) {
+                    phoneText.setError("Invalid phone number"+number);
                     return;
                 } else {
                     getSharedPreferences("NOG_Pref", MODE_PRIVATE).edit().putString("name", name)
