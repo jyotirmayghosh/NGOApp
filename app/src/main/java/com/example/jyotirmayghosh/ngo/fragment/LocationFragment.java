@@ -103,7 +103,7 @@ public class LocationFragment extends Fragment implements LocationListener {
         });
 
     }
-
+    //new comment added..
     private void showGPSDisabledAlertToUser(){
         AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(getContext());
         alertDialogBuilder.setMessage("Please enable GPS to send current location.")

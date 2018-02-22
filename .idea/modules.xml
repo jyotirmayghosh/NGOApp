@@ -2,8 +2,10 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/NGO.iml" filepath="$PROJECT_DIR$/NGO.iml" />
+      <module fileurl="file://C:\Users\Jyotirmay\AndroidStudioProjects\NGOApp\NGO.iml" filepath="C:\Users\Jyotirmay\AndroidStudioProjects\NGOApp\NGO.iml" />
+      <module fileurl="file://$PROJECT_DIR$/NGOApp.iml" filepath="$PROJECT_DIR$/NGOApp.iml" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
+      <module fileurl="file://C:\Users\Jyotirmay\AndroidStudioProjects\NGOApp\app\app.iml" filepath="C:\Users\Jyotirmay\AndroidStudioProjects\NGOApp\app\app.iml" />
     </modules>
   </component>
 </project>
