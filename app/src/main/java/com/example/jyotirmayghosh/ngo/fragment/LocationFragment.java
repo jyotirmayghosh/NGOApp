@@ -54,6 +54,7 @@ public class LocationFragment extends Fragment implements LocationListener {
     String name, phone, latitude, longitude;
     ProgressDialog progressDialog;
     String serverUrl = "https://accelerated-invento.000webhostapp.com/send_location.php";
+    Location location;
 
     public LocationFragment() {
         // Required empty public constructor
@@ -83,54 +84,27 @@ public class LocationFragment extends Fragment implements LocationListener {
 
         name=nameSaved;
         phone=phoneSaved;
+        progressDialog = new ProgressDialog(getContext());
 
         locationLayout=getView().findViewById(R.id.getLocationConstrain);
         setLocationView=getView().findViewById(R.id.tvLocation);
         locationLayout.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                LocationManager location = (LocationManager) getContext().getSystemService(LOCATION_SERVICE);
 
-                if (location.isProviderEnabled(LocationManager.GPS_PROVIDER)){
-                    progressDialog = new ProgressDialog(getContext());
                     progressDialog.setMessage("Getting location, please wait...");
                     progressDialog.show();
                     getLocation();
-                }else{
-                    showGPSDisabledAlertToUser();
-                }
+                    progressDialog.dismiss();
             }
         });
 
-    }
-    //new comment added..
-    private void showGPSDisabledAlertToUser(){
-        AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(getContext());
-        alertDialogBuilder.setMessage("Please enable GPS to send current location.")
-                .setCancelable(false)
-                .setPositiveButton("Enable GPS",
-                        new DialogInterface.OnClickListener(){
-                            public void onClick(DialogInterface dialog, int id){
-                                Intent callGPSSettingIntent = new Intent(
-                                        android.provider.Settings.ACTION_LOCATION_SOURCE_SETTINGS);
-                                startActivity(callGPSSettingIntent);
-                            }
-                        });
-        alertDialogBuilder.setNegativeButton("Cancel",
-                new DialogInterface.OnClickListener(){
-                    public void onClick(DialogInterface dialog, int id){
-                        dialog.cancel();
-                    }
-                });
-        AlertDialog alert = alertDialogBuilder.create();
-        alert.show();
     }
 
     void getLocation() {
         try {
             locationManager = (LocationManager) getContext().getSystemService(LOCATION_SERVICE);
             locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 5000, 5, this);
-            progressDialog.dismiss();
         }
         catch(SecurityException e) {
             e.printStackTrace();
@@ -139,7 +113,7 @@ public class LocationFragment extends Fragment implements LocationListener {
 
     @Override
     public void onLocationChanged(Location location) {
-        setLocationView.setText("Latitude: " + location.getLatitude() + "\n Longitude: " + location.getLongitude());
+        setLocationView.setText(" Latitude: " + location.getLatitude() + "\n Longitude: " + location.getLongitude()+"\n ");
 
         try {
             Geocoder geocoder = new Geocoder(getContext(), Locale.getDefault());
@@ -161,12 +135,30 @@ public class LocationFragment extends Fragment implements LocationListener {
 
     @Override
     public void onProviderEnabled(String s) {
-
+        Toast.makeText(getContext(), " GPS Enabled.", Toast.LENGTH_SHORT).show();
     }
 
     @Override
     public void onProviderDisabled(String s) {
-
+        AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(getContext());
+        alertDialogBuilder.setMessage("Enable GPS to send current location.")
+                .setCancelable(false)
+                .setPositiveButton("Enable GPS",
+                        new DialogInterface.OnClickListener(){
+                            public void onClick(DialogInterface dialog, int id){
+                                Intent callGPSSettingIntent = new Intent(
+                                        android.provider.Settings.ACTION_LOCATION_SOURCE_SETTINGS);
+                                startActivity(callGPSSettingIntent);
+                            }
+                        });
+        alertDialogBuilder.setNegativeButton("Cancel",
+                new DialogInterface.OnClickListener(){
+                    public void onClick(DialogInterface dialog, int id){
+                        dialog.cancel();
+                    }
+                });
+        AlertDialog alert = alertDialogBuilder.create();
+        alert.show();
     }
 
     @Override
@@ -179,7 +171,7 @@ public class LocationFragment extends Fragment implements LocationListener {
     public boolean onOptionsItemSelected(MenuItem item) {
 
         if (item.getItemId() == R.id.action_send) {
-            progressDialog = new ProgressDialog(getContext());
+            //progressDialog = new ProgressDialog(getContext());
             progressDialog.setMessage("Send location, please wait...");
             progressDialog.show();
 
