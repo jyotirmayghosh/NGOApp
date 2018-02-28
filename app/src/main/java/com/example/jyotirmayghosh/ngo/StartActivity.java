@@ -1,12 +1,15 @@
 package com.example.jyotirmayghosh.ngo;
 
 import android.Manifest;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.telephony.TelephonyManager;
 import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
@@ -47,6 +50,7 @@ public class StartActivity extends AppCompatActivity implements
             nameText.setVisibility(View.VISIBLE);
             phoneText.setVisibility(View.VISIBLE);
             submitButton.setVisibility(View.VISIBLE);
+
         } else {
             Intent intent = new Intent(getApplicationContext(), MainActivity.class);
             intent.putExtra(NAME, name);
@@ -75,7 +79,13 @@ public class StartActivity extends AppCompatActivity implements
                 } else {
                     getSharedPreferences("NOG_Pref", MODE_PRIVATE).edit().putString("name", name)
                             .putString("phone", phone).commit();
+
+                    Intent intent = new Intent(getApplicationContext(), MainActivity.class);
+                    //intent.putExtra(NAME, name);
+                    //intent.putExtra(PHONE, phone);
+                    startActivity(intent);
                     requestedPermissions();
+                    finish();
                 }
             }
         });

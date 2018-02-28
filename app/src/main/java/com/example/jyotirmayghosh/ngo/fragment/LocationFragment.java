@@ -22,6 +22,7 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -51,10 +52,10 @@ public class LocationFragment extends Fragment implements LocationListener {
     private ConstraintLayout locationLayout;
     private TextView setLocationView;
     LocationManager locationManager;
-    String name, phone, latitude, longitude;
+    String name, phone, latitude, longitude=null;
     ProgressDialog progressDialog;
     String serverUrl = "https://accelerated-invento.000webhostapp.com/send_location.php";
-    Location location;
+    Button getlocatonButton;
 
     public LocationFragment() {
         // Required empty public constructor
@@ -85,17 +86,23 @@ public class LocationFragment extends Fragment implements LocationListener {
         name=nameSaved;
         phone=phoneSaved;
         progressDialog = new ProgressDialog(getContext());
-
+        getlocatonButton=getView().findViewById(R.id.btnGetLocation);
+        getlocatonButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                progressDialog.setMessage("Getting location, please wait...");
+                progressDialog.show();
+                getLocation();
+            }
+        });
         locationLayout=getView().findViewById(R.id.getLocationConstrain);
         setLocationView=getView().findViewById(R.id.tvLocation);
         locationLayout.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-
-                    progressDialog.setMessage("Getting location, please wait...");
-                    progressDialog.show();
-                    getLocation();
-                    progressDialog.dismiss();
+                progressDialog.setMessage("Getting location, please wait...");
+                progressDialog.show();
+                getLocation();
             }
         });
 
@@ -113,8 +120,9 @@ public class LocationFragment extends Fragment implements LocationListener {
 
     @Override
     public void onLocationChanged(Location location) {
-        setLocationView.setText(" Latitude: " + location.getLatitude() + "\n Longitude: " + location.getLongitude()+"\n ");
-
+        setLocationView.setText("Latitude: " + location.getLatitude() + "\nLongitude: " + location.getLongitude()+"\n");
+        setLocationView.setVisibility(View.VISIBLE);
+        progressDialog.dismiss();
         try {
             Geocoder geocoder = new Geocoder(getContext(), Locale.getDefault());
             List<Address> addresses = geocoder.getFromLocation(location.getLatitude(), location.getLongitude(), 1);
@@ -171,39 +179,43 @@ public class LocationFragment extends Fragment implements LocationListener {
     public boolean onOptionsItemSelected(MenuItem item) {
 
         if (item.getItemId() == R.id.action_send) {
-            //progressDialog = new ProgressDialog(getContext());
-            progressDialog.setMessage("Send location, please wait...");
-            progressDialog.show();
+            if (longitude==null)
+            {
+                Toast.makeText(getContext(), "Click on \"GET CURRENT LOCATION \"", Toast.LENGTH_SHORT).show();
+            }
+            else {
+                progressDialog.setMessage("Send location, please wait...");
+                progressDialog.show();
 
-            final RequestQueue queue = Volley.newRequestQueue(getContext());
-            StringRequest stringRequest = new StringRequest(Request.Method.POST, serverUrl,
-                    new Response.Listener<String>() {
-                        @Override
-                        public void onResponse(String response) {
-                            progressDialog.dismiss();
-                            setLocationView.setText("");
-                            Toast.makeText(getContext(), response, Toast.LENGTH_SHORT).show();
-                            queue.stop();
-                        }
-                    }, new Response.ErrorListener() {
-                @Override
-                public void onErrorResponse(VolleyError error) {
-                    error.getMessage();
-                    error.printStackTrace();
-                }
-            }) {
-                @Override
-                protected Map<String, String> getParams() throws AuthFailureError {
-                    Map<String, String> params = new HashMap<String, String>();
-                    params.put("user_name", name);
-                    params.put("user_phone", phone);
-                    params.put("latitude", latitude);
-                    params.put("longitude", longitude);
-                    return params;
-                }
-            };
-            queue.add(stringRequest);
-
+                final RequestQueue queue = Volley.newRequestQueue(getContext());
+                StringRequest stringRequest = new StringRequest(Request.Method.POST, serverUrl,
+                        new Response.Listener<String>() {
+                            @Override
+                            public void onResponse(String response) {
+                                progressDialog.dismiss();
+                                setLocationView.setText("");
+                                Toast.makeText(getContext(), response, Toast.LENGTH_SHORT).show();
+                                queue.stop();
+                            }
+                        }, new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        error.getMessage();
+                        error.printStackTrace();
+                    }
+                }) {
+                    @Override
+                    protected Map<String, String> getParams() throws AuthFailureError {
+                        Map<String, String> params = new HashMap<String, String>();
+                        params.put("user_name", name);
+                        params.put("user_phone", phone);
+                        params.put("latitude", latitude);
+                        params.put("longitude", longitude);
+                        return params;
+                    }
+                };
+                queue.add(stringRequest);
+            }
         } else if (item.getItemId() == R.id.action_discard) {
             setLocationView.setText("");
             Toast.makeText(getContext(), "Location Discarded.", Toast.LENGTH_SHORT).show();

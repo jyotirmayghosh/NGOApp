@@ -64,7 +64,7 @@ import static android.content.Context.MODE_PRIVATE;
 public class MessageFragment extends Fragment {
 
     private static final int PICK_IMAGE_REQUEST = 10;
-    String name, phone, subject, message, image;
+    String name, phone, subject = null, message = null, image;
     private TextView nameView, phoneView;
     private EditText subjectText, messageText;
     private ImageView attachedImageView;
@@ -125,7 +125,12 @@ public class MessageFragment extends Fragment {
         subject = subjectText.getText().toString();
         message = messageText.getText().toString();
         if (item.getItemId() == R.id.action_send) {
-            uploadImageSend();
+            if (subject.equals("") || message.equals("")) {
+                Toast.makeText(getContext(), "No Subject or Message.", Toast.LENGTH_SHORT).show();
+            }
+            else {
+                uploadImageSend();
+            }
         } /*else if (item.getItemId() == R.id.action_attach) {
             Intent intent = new Intent();
             intent.setType("image*//*");
