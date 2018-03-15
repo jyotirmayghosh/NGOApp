@@ -5,14 +5,12 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.net.Uri;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.support.annotation.Nullable;
 import android.support.constraint.ConstraintLayout;
 import android.support.v4.app.Fragment;
 import android.util.Base64;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -25,18 +23,13 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.android.volley.AuthFailureError;
-import com.android.volley.DefaultRetryPolicy;
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
-import com.android.volley.RetryPolicy;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
-import com.example.jyotirmayghosh.ngo.MainActivity;
 import com.example.jyotirmayghosh.ngo.R;
-
-import junit.framework.Test;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -50,7 +43,6 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.util.HashMap;
-import java.util.Hashtable;
 import java.util.Map;
 
 import javax.net.ssl.HttpsURLConnection;
@@ -64,14 +56,14 @@ import static android.content.Context.MODE_PRIVATE;
 public class MessageFragment extends Fragment {
 
     private static final int PICK_IMAGE_REQUEST = 10;
-    String name, phone, subject = null, message = null, image;
+    String name, phone, subject = null, message = null;
     private TextView nameView, phoneView;
     private EditText subjectText, messageText;
     private ImageView attachedImageView;
     private ConstraintLayout layout;
     String serverUrl = "https://accelerated-invento.000webhostapp.com/send_message.php";
 
-    Bitmap FixBitmap ;
+    Bitmap FixBitmap = null ;
     ProgressDialog progressDialog;
 
     public MessageFragment() {
@@ -121,7 +113,6 @@ public class MessageFragment extends Fragment {
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-
         subject = subjectText.getText().toString();
         message = messageText.getText().toString();
         if (item.getItemId() == R.id.action_send) {
@@ -131,13 +122,10 @@ public class MessageFragment extends Fragment {
             else {
                 uploadImageSend();
             }
-        } /*else if (item.getItemId() == R.id.action_attach) {
-            Intent intent = new Intent();
-            intent.setType("image*//*");
-            intent.setAction(Intent.ACTION_GET_CONTENT);
-            startActivityForResult(Intent.createChooser(intent, "Select Image From Gallery"), PICK_IMAGE_REQUEST);
+        } else if (item.getItemId() == R.id.action_attach) {
+            startActivityForResult(new Intent(Intent.ACTION_PICK, android.provider.MediaStore.Images.Media.INTERNAL_CONTENT_URI), PICK_IMAGE_REQUEST);
 
-        }*/ else if (item.getItemId() == R.id.action_discard) {
+        } else if (item.getItemId() == R.id.action_discard) {
             subjectText.setText("");
             messageText.setText("");
             Toast.makeText(getContext(), "Message Discarded.", Toast.LENGTH_SHORT).show();
@@ -161,26 +149,23 @@ public class MessageFragment extends Fragment {
         }
     }
 
-    public void uploadImageSend()
-    {
+    public void uploadImageSend() {
+
+        String image = "empty path";
+        if (FixBitmap!=null) {
+            ByteArrayOutputStream byteArrayOutputStreamObject;
+            byteArrayOutputStreamObject = new ByteArrayOutputStream();
+            FixBitmap.compress(Bitmap.CompressFormat.JPEG, 100, byteArrayOutputStreamObject);
+            byte[] byteArrayVar = byteArrayOutputStreamObject.toByteArray();
+            image = Base64.encodeToString(byteArrayVar, Base64.DEFAULT);
+        }
+
         progressDialog = new ProgressDialog(getContext());
         progressDialog.setMessage("Send message, please wait...");
         progressDialog.show();
 
-        //converting image to base64 string
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        if (FixBitmap==null)
-        {
-            image= "empty path";
-        }
-        else
-        {
-            FixBitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos);
-            byte[] imageBytes = baos.toByteArray();
-            image = Base64.encodeToString(imageBytes, Base64.DEFAULT);
-        }
-
         final RequestQueue queue = Volley.newRequestQueue(getContext());
+        final String finalImage = image;
         StringRequest stringRequest = new StringRequest(Request.Method.POST, serverUrl,
                 new Response.Listener<String>() {
                     @Override
@@ -188,7 +173,7 @@ public class MessageFragment extends Fragment {
                         progressDialog.hide();
                         Toast.makeText(getContext(), response, Toast.LENGTH_SHORT).show();
                         subjectText.setText("");
-                        messageText.setText("");
+                        messageText.setText(response);
                         layout.setVisibility(View.INVISIBLE);
                         queue.stop();
                     }
@@ -201,16 +186,75 @@ public class MessageFragment extends Fragment {
         }) {
             @Override
             protected Map<String, String> getParams() throws AuthFailureError {
-                Map<String, String> params = new HashMap<String, String>();
+                HashMap<String, String> params = new HashMap<String, String>();
                 params.put("user_name", name);
                 params.put("user_phone", phone);
                 params.put("user_subject", subject);
                 params.put("user_message", message);
-                params.put("attached_image", image);
+
+                ImageProcessClass imageProcessClass = new ImageProcessClass();
+                params.put("attached_image", finalImage);
+                imageProcessClass.ImageHttpRequest(serverUrl, params);
+
                 return params;
             }
         };
         queue.add(stringRequest);
     }
+    
+    public class ImageProcessClass {
 
+        boolean check=true;
+        public String ImageHttpRequest(String requestURL, HashMap<String, String> PData) {
+            StringBuilder stringBuilder = new StringBuilder();
+            try {
+                URL url;
+                HttpURLConnection httpURLConnectionObject;
+                OutputStream OutPutStream;
+                BufferedWriter bufferedWriterObject;
+                BufferedReader bufferedReaderObject;
+                int RC;
+                url = new URL(requestURL);
+                httpURLConnectionObject = (HttpURLConnection) url.openConnection();
+                httpURLConnectionObject.setReadTimeout(19000);
+                httpURLConnectionObject.setConnectTimeout(19000);
+                httpURLConnectionObject.setRequestMethod("POST");
+                httpURLConnectionObject.setDoInput(true);
+                httpURLConnectionObject.setDoOutput(true);
+                OutPutStream = httpURLConnectionObject.getOutputStream();
+                bufferedWriterObject = new BufferedWriter(new OutputStreamWriter(OutPutStream, "UTF-8"));
+                bufferedWriterObject.write(bufferedWriterDataFN(PData));
+                bufferedWriterObject.flush();
+                bufferedWriterObject.close();
+                OutPutStream.close();
+                RC = httpURLConnectionObject.getResponseCode();
+                if (RC == HttpsURLConnection.HTTP_OK) {
+                    bufferedReaderObject = new BufferedReader(new InputStreamReader(httpURLConnectionObject.getInputStream()));
+                    stringBuilder = new StringBuilder();
+                    String RC2;
+                    while ((RC2 = bufferedReaderObject.readLine()) != null) {
+                        stringBuilder.append(RC2);
+                    }
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            return stringBuilder.toString();
+        }
+
+        private String bufferedWriterDataFN(HashMap<String, String> HashMapParams) throws UnsupportedEncodingException {
+            StringBuilder stringBuilderObject;
+            stringBuilderObject = new StringBuilder();
+            for (Map.Entry<String, String> KEY : HashMapParams.entrySet()) {
+                if (check)
+                    check = false;
+                else
+                    stringBuilderObject.append("&");
+                stringBuilderObject.append(URLEncoder.encode(KEY.getKey(), "UTF-8"));
+                stringBuilderObject.append("=");
+                stringBuilderObject.append(URLEncoder.encode(KEY.getValue(), "UTF-8"));
+            }
+            return stringBuilderObject.toString();
+        }
+    }
 }
